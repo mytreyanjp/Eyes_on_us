@@ -20,7 +20,7 @@ def send_amount_to_automate(amount, phno):
         to=phno  # Recipient's phone number
     )
 
-def wait_for_server(url, max_retries=10, wait_time=20):
+def wait_for_server(url, max_retries=30, wait_time=10):
     """Wait for the server to start."""
     retries = 0
     while retries < max_retries:
