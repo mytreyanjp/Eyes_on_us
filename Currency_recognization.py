@@ -6,7 +6,6 @@ import pyttsx3
 import requests
 import time
 
-
 url1 = "https://llamalab.com/automate/cloud/message"
 headers = {
     'Content-Type': 'application/json'
@@ -22,7 +21,7 @@ def send_amount_to_automate(amount):
     }
     response = requests.post(url1, json=data, headers=headers)
 
-def wait_for_server(url, max_retries=30, wait_time=5):
+def wait_for_server(url, max_retries=50, wait_time=5):
     """Wait for the server to start."""
     retries = 0
     while retries < max_retries:
@@ -40,9 +39,9 @@ def wait_for_server(url, max_retries=30, wait_time=5):
 
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = YOLO("best_d.pt").to(device)
+    model = YOLO("best_up.pt").to(device)
 
-    video_url = "http://192.168.1.4:8080/video"
+    video_url = "http://192.168.1.6:8080/video"
     
     if not wait_for_server(video_url):
         print("Exiting due to server connection issues.")
@@ -97,23 +96,21 @@ def main():
 
         resized_frame = cv2.resize(frame, (resize_width, resize_height))
 
+        # Display the detected frame continuously
+        cv2.imshow('Detected Frame', resized_frame)
+
         if total_amount > 0:
             # Send the total amount to Automate
+            cap.release()
             send_amount_to_automate(total_amount)
 
-            
-
-            # Display the detected frame
-            cv2.imshow('Detected Frame', resized_frame)
-            cv2.waitKey(0)  # Wait until a key is pressed
-
-            cv2.destroyAllWindows()
-
-            # Wait for 10 seconds before resuming detection
+            print(f"Pausing for 10 seconds... Amount detected: {total_amount}")
             time.sleep(10)
 
-            # Reset the detection loop
-            continue
+            cap = cv2.VideoCapture(video_url)
+        # Wait for 1ms to display the next frame (real-time display)
+        if cv2.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to quit
+            break
 
     cap.release()
     cv2.destroyAllWindows()
